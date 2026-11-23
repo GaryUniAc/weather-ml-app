@@ -2,20 +2,22 @@ from flask import Flask, request, render_template
 import pickle
 import numpy as np
 import time
+import pandas as pd
 
 app = Flask(__name__)
 
-weather_classes = ['clear', 'cloudy', 'drizzly', 'foggy', 'hazey', 'misty', 'rainy', 'smokey', 'thunderstorm']
+weather_classes = ['clear', 'foggy', 'drizzly', 'cloudy', 'hazey', 'misty', 'rainy', 'smokey', 'thunderstorm']
 
-def load_model(model_path = 'model/model.pkl'):
-	return pickle.load(open(model_path, 'rb'))
+def load_model(model_path='model/model.pkl'):
+    with open(model_path, 'rb') as model_file:
+        return pickle.load(model_file)
 
 def classify_weather(features):
 	model = load_model()
 	start = time.time()
 	prediction_index = model.predict(features)[0]
 	latency = round((time.time() - start) * 1000, 2) #we are here
-	prediction = weather_classes[1]
+	prediction = weather_classes[prediction_index]
 	
 	return prediction, latency
 
@@ -35,11 +37,17 @@ def home():
 			snow = float(request.form.get('snow', 0) or 0)
 			clouds = float(request.form.get('clouds', 0) or 0)
 
-			features = np.array([
-				temperature, pressure, humidity,
-				wind_speed, wind_deg, rain_1h,
-				rain_3h, snow, clouds
-			]).reshape(1, -1)
+			features = pd.DataFrame([{
+				'temp': float(temperature),
+				'pressure': float(pressure),
+				'humidity': float(humidity),
+				'wind_speed': float(wind_speed),
+				'wind_deg': float(wind_deg),
+				'rain_1h': rain_1h,
+				'rain_3h': rain_3h,
+				'snow_3h': snow,
+				'clouds_all': clouds
+			}])
 
 			
 			prediction, latency = classify_weather(features)
