@@ -1,0 +1,30 @@
+
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+    branches: 
+      - main
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Apply Kubernetes Configuration
+        run: |
+          kubectl apply -f kubernetes/
+
+      - name: Wait for Deployment
+        run: |
+          kubectl rollout status deployment/weather-ml-app --timeout=180s
