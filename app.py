@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template
+from pathlib import Path
 import pickle
 import numpy as np
 import time
@@ -12,7 +13,7 @@ def load_model(model_path='model/model.pkl'):
 	model_path = Path(model_path)
 
 	if not model_path.is_absolute():
-		model_path = Path(__filr__).resolve().parent / model_path
+		model_path = Path(__file__).resolve().parent / model_path
 		
 	with open(model_path, 'rb') as model_file:
 		return pickle.load(model_file)
