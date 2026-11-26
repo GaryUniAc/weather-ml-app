@@ -14,8 +14,8 @@ def load_model(model_path='model/model.pkl'):
 	if not model_path.is_absolute():
 		model_path = Path(__filr__).resolve().parent / model_path
 		
-    with open(model_path, 'rb') as model_file:
-        return pickle.load(model_file)
+	with open(model_path, 'rb') as model_file:
+		return pickle.load(model_file)
 
 def classify_weather(features):
 	model = load_model()
