@@ -9,6 +9,11 @@ app = Flask(__name__)
 weather_classes = ['clear', 'foggy', 'drizzly', 'cloudy', 'hazey', 'misty', 'rainy', 'smokey', 'thunderstorm']
 
 def load_model(model_path='model/model.pkl'):
+	model_path = Path(model_path)
+
+	if not model_path.is_absolute():
+		model_path = Path(__filr__).resolve().parent / model_path
+		
     with open(model_path, 'rb') as model_file:
         return pickle.load(model_file)
 
