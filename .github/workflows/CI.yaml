@@ -63,5 +63,5 @@ jobs:
 
       - name: Push Docker Image
         run: |
-          docker tag weather-ml-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:${{ github.sha }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:${{ github.sha }}
+          docker tag weather-ml-app:latest ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/weather-ml-app:latest
