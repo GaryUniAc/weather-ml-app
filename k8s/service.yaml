@@ -5,7 +5,7 @@
   gather_facts: false
 
   vars:
-    app_name: "my-app"
+    app_name: "weather-ml-app"
     namespace: "default"
     app_port: 8080
     service_port: 80

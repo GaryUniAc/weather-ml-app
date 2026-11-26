@@ -9,7 +9,7 @@
     minikube_version: "latest"
     minikube_driver: "docker"
 
-    app_name: "wather-ml-app"
+    app_name: "weather-ml-app"
     app_image: "muhammadabid17/weather-ml-app:latest"
     app_port: 8080
     deployment_replicas: 3
