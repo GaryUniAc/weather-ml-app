@@ -10,7 +10,7 @@
     minikube_driver: "docker"
 
     app_name: "weather-ml-app"
-    app_image: "muhammadabid17/weather-ml-app:latest"
+    app_image: "muhammadabid17/weather-ml-app:v2"
     app_port: 8080
     deployment_replicas: 3
     namespace: "default"
