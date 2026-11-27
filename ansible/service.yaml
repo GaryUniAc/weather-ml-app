@@ -1,0 +1,54 @@
+---
+- name: Create or update the application Service
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    app_name: "weather-ml-app"
+    namespace: "default"
+    app_port: 8080
+    service_port: 80
+    service_type: "NodePort"
+
+  tasks:
+    - name: Apply a Service for the application
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - apply
+          - -f
+          - "-"
+        stdin: |
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: {{ app_name }}
+            namespace: {{ namespace }}
+          spec:
+            type: {{ service_type }}
+            selector:
+              app: {{ app_name }}
+            ports:
+              - name: http
+                protocol: TCP
+                port: {{ service_port }}
+                targetPort: {{ app_port }}
+      register: service_apply
+      changed_when: "'configured' in service_apply.stdout or 'created' in service_apply.stdout"
+
+    - name: Show the Service details
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - get
+          - service
+          - "{{ app_name }}"
+          - "-n"
+          - "{{ namespace }}"
+      register: service_details
+      changed_when: false
+
+    - name: Print the Service details
+      ansible.builtin.debug:
+        var: service_details.stdout_lines

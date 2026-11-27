@@ -1,129 +1,35 @@
----
-- name: Install tools and deploy the application to Minikube
-  hosts: localhost
-  connection: local
-  gather_facts: true
 
-  vars:
-    kubectl_version: "stable"
-    minikube_version: "latest"
-    minikube_driver: "docker"
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-ml-app
+  labels:
+    app: weather-ml-app
 
-    app_name: "weather-ml-app"
-    app_image: "muhammadabid17/weather-ml-app:latest"
-    app_port: 8080
-    deployment_replicas: 3
-    namespace: "default"
+spec:
+  replicas: 3
 
-  tasks:
-    - name: Install prerequisites
-      become: true
-      ansible.builtin.apt:
-        name:
-          - ca-certificates
-          - curl
-          - conntrack
-          - socat
-        state: present
-        update_cache: true
-      when: ansible_os_family == "Debian"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
 
-    - name: Read the latest stable kubectl version
-      ansible.builtin.uri:
-        url: https://dl.k8s.io/release/stable.txt
-        return_content: true
-      register: kubectl_stable
-      when: kubectl_version == "stable"
+  selector:
+    matchLabels:
+      app: weather-ml-app
 
-    - name: Set kubectl version to install
-      ansible.builtin.set_fact:
-        kubectl_release: >-
-          {{ kubectl_stable.content | trim
-             if kubectl_version == "stable" else kubectl_version }}
+  template:
+    metadata:
+      labels:
+        app: weather-ml-app
 
-    - name: Download kubectl
-      become: true
-      ansible.builtin.get_url:
-        url: "https://dl.k8s.io/release/{{ kubectl_release }}/bin/linux/amd64/kubectl"
-        dest: /usr/local/bin/kubectl
-        mode: "0755"
-      when: ansible_architecture in ["x86_64", "amd64"]
+    spec:
+      containers:
+        - name: weather-ml-app
+          image: muhammadabid17/weather-ml-app:latest
+          imagePullPolicy: Always
 
-    - name: Download Minikube
-      become: true
-      ansible.builtin.get_url:
-        url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
-        dest: /usr/local/bin/minikube
-        mode: "0755"
-      when: minikube_version == "latest" and ansible_architecture in ["x86_64", "amd64"]
-
-    - name: Check that Docker is installed and available
-      ansible.builtin.command: docker info
-      changed_when: false
-      failed_when: false
-      register: docker_check
-
-    - name: Require Docker for the selected Minikube driver
-      ansible.builtin.assert:
-        that:
-          - docker_check.rc == 0
-        fail_msg: >-
-          Docker must be installed, running, and accessible to the user running
-          this playbook when minikube_driver is 'docker'.
-
-    - name: Start Minikube
-      ansible.builtin.command: "minikube start --driver={{ minikube_driver }}"
-      register: minikube_start
-      changed_when: >-
-        'Done' in minikube_start.stdout or
-        'Done' in minikube_start.stderr
-
-    - name: Ensure the application Deployment exists with rolling updates
-      ansible.builtin.command:
-        argv:
-          - kubectl
-          - apply
-          - -f
-          - "-"
-        stdin: |
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: {{ app_name }}
-            namespace: {{ namespace }}
-          spec:
-            replicas: {{ deployment_replicas }}
-            strategy:
-              type: RollingUpdate
-              rollingUpdate:
-                maxSurge: 1
-                maxUnavailable: 0
-            selector:
-              matchLabels:
-                app: {{ app_name }}
-            template:
-              metadata:
-                labels:
-                  app: {{ app_name }}
-              spec:
-                containers:
-                  - name: {{ app_name }}
-                    image: {{ app_image }}
-                    imagePullPolicy: Always
-                    ports:
-                      - name: http
-                        containerPort: {{ app_port }}
-      register: deployment_apply
-      changed_when: "'configured' in deployment_apply.stdout or 'created' in deployment_apply.stdout"
-
-    - name: Wait for the Deployment rollout to complete
-      ansible.builtin.command:
-        argv:
-          - kubectl
-          - rollout
-          - status
-          - "deployment/{{ app_name }}"
-          - "-n"
-          - "{{ namespace }}"
-          - "--timeout=180s"
-      changed_when: false
+          ports:
+            - containerPort: 5000
+              protocol: TCP
