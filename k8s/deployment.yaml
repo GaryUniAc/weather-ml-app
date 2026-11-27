@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: weather-ml-app
-          image: muhammadabid17/weather-ml-app:latest
+          image: muhammadabid17/weather-ml-app:v2
           imagePullPolicy: Always
 
           ports:
